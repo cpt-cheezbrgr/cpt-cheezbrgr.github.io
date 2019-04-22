@@ -1,1 +1,1 @@
-# cpt-cheezbrgr.github.io.
+# cpt-cheezbrgr.github.io
