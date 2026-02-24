@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Blog CMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="/admin">Blog CMS</a></div>
+    <div class="sidebar-label">Content</div>
+    <nav>
+      <a href="/admin" class="active">
+        <span class="icon">◈</span> Posts
+      </a>
+      <a href="/admin/media">
+        <span class="icon">◧</span> Media
+      </a>
+    </nav>
+    <div class="sidebar-label">Site</div>
+    <nav>
+      <a href="/" target="_blank">
+        <span class="icon">↗</span> View Blog
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar" id="userAvatar">—</div>
+        <span id="userLabel">Loading…</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn">
+        <span class="icon">⎋</span> Sign out
+      </button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h1>Posts</h1>
+      <div class="topbar-actions">
+        <a href="/admin/editor" class="btn btn-primary">+ New Post</a>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- Stats -->
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="statTotal">–</div></div>
+        <div class="stat-card success"><div class="stat-label">Published</div><div class="stat-value" id="statPublished">–</div></div>
+        <div class="stat-card"><div class="stat-label">Drafts</div><div class="stat-value" id="statDraft">–</div></div>
+        <div class="stat-card warning"><div class="stat-label">Scheduled</div><div class="stat-value" id="statScheduled">–</div></div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <input type="search" class="search-input" id="searchInput" placeholder="Search posts…">
+        <select class="filter-select" id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="published">Published</option>
+          <option value="draft">Draft</option>
+          <option value="scheduled">Scheduled</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Tags</th>
+                <th>Date</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="postsTable">
+              <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-muted)">
+                <span class="spinner"></span>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:12px 16px;border-top:1px solid var(--border);">
+          <div class="pagination">
+            <button id="prevBtn" disabled>← Prev</button>
+            <span class="page-info" id="pageInfo">—</span>
+            <button id="nextBtn" disabled>Next →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirm modal -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+      <h2>Delete post?</h2>
+      <p>This action cannot be undone. The post will be permanently removed.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancelDelete">Cancel</button>
+        <button class="btn btn-danger" id="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/admin/js/dashboard.js"></script>
+</body>
+</html>

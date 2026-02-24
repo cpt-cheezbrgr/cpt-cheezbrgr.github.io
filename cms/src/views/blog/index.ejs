@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= blogTitle %></title>
+  <meta name="description" content="<%= blogDesc %>">
+  <link rel="stylesheet" href="/css/blog.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="blog-header">
+    <div class="container">
+      <a href="/" class="blog-logo"><%= blogTitle %></a>
+      <a href="/login" class="admin-link">Admin</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <% if (currentTag) { %>
+      <div class="tag-filter">
+        Posts tagged <span class="tag">#<%= currentTag %></span>
+        <a href="/" class="clear-tag">Clear filter</a>
+      </div>
+    <% } %>
+
+    <% if (posts.length === 0) { %>
+      <div class="empty-state">
+        <p>No posts yet. Check back soon.</p>
+      </div>
+    <% } else { %>
+      <div class="post-grid">
+        <% posts.forEach(post => { %>
+          <article class="post-card">
+            <% if (post.coverImage) { %>
+              <a href="/post/<%= post.slug %>">
+                <img src="<%= post.coverImage %>" alt="<%= post.title %>" class="post-card-cover" loading="lazy">
+              </a>
+            <% } %>
+            <div class="post-card-body">
+              <div class="post-meta">
+                <time datetime="<%= post.publishedAt?.toDate?.()?.toISOString() || '' %>">
+                  <%= post.publishedAt?.toDate ? post.publishedAt.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '' %>
+                </time>
+                <% if (post.tags && post.tags.length) { %>
+                  <div class="tag-list">
+                    <% post.tags.slice(0, 3).forEach(tag => { %>
+                      <a href="/?tag=<%= encodeURIComponent(tag) %>" class="tag">#<%= tag %></a>
+                    <% }) %>
+                  </div>
+                <% } %>
+              </div>
+              <h2 class="post-card-title">
+                <a href="/post/<%= post.slug %>"><%= post.title %></a>
+              </h2>
+              <% if (post.excerpt) { %>
+                <p class="post-card-excerpt"><%= post.excerpt %></p>
+              <% } %>
+              <a href="/post/<%= post.slug %>" class="read-more">Read more →</a>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+
+      <% if (totalPages > 1) { %>
+        <nav class="pagination">
+          <% if (currentPage > 1) { %>
+            <a href="?page=<%= currentPage - 1 %><%= currentTag ? '&tag=' + encodeURIComponent(currentTag) : '' %>" class="page-btn">← Previous</a>
+          <% } %>
+          <span class="page-info">Page <%= currentPage %> of <%= totalPages %></span>
+          <% if (currentPage < totalPages) { %>
+            <a href="?page=<%= currentPage + 1 %><%= currentTag ? '&tag=' + encodeURIComponent(currentTag) : '' %>" class="page-btn">Next →</a>
+          <% } %>
+        </nav>
+      <% } %>
+    <% } %>
+  </main>
+
+  <footer class="blog-footer">
+    <div class="container">
+      <p>&copy; <%= new Date().getFullYear() %> <%= blogTitle %></p>
+    </div>
+  </footer>
+</body>
+</html>
