@@ -31,6 +31,15 @@ app.use('/api/posts', requireAuth, postsRoutes);
 app.use('/api/media', requireAuth, mediaRoutes);
 app.use('/api/scheduler', schedulerRoutes);
 
+// ── Temporary debug endpoint ──────────────────────────────────────────────────
+app.get('/debug-posts', async (req, res) => {
+  const { Firestore } = require('@google-cloud/firestore');
+  const db2 = new Firestore({ projectId: process.env.GCP_PROJECT_ID });
+  const snap = await db2.collection('posts').get();
+  const posts = snap.docs.map(d => ({ id: d.id, status: d.data().status, slug: d.data().slug, publishedAt: d.data().publishedAt?.toDate?.()?.toISOString() }));
+  res.json({ count: posts.length, posts });
+});
+
 // ── Public blog (server-side rendered) ───────────────────────────────────────
 app.get('/', async (req, res) => {
   try {
