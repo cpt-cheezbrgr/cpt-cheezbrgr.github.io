@@ -151,20 +151,24 @@ async function listPosts({ status, tag, search, page = 1, limit = 20 } = {}) {
 }
 
 async function getPublishedPosts({ page = 1, limit = 8, tag } = {}) {
-  let query = db.collection(POSTS)
-    .where('status', '==', 'published')
-    .orderBy('publishedAt', 'desc');
+  let query = db.collection(POSTS).where('status', '==', 'published');
 
   if (tag) query = query.where('tags', 'array-contains', tag);
 
-  const countSnap = await query.count().get();
-  const total = countSnap.data().count;
+  const snap = await query.get();
+  let posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+  posts.sort((a, b) => {
+    const aTime = a.publishedAt?.toMillis?.() ?? 0;
+    const bTime = b.publishedAt?.toMillis?.() ?? 0;
+    return bTime - aTime;
+  });
+
+  const total = posts.length;
   const offset = (page - 1) * limit;
-  const snap = await query.offset(offset).limit(limit).get();
-  const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  const paginated = posts.slice(offset, offset + limit);
 
-  return { posts, total, totalPages: Math.ceil(total / limit) };
+  return { posts: paginated, total, totalPages: Math.ceil(total / limit) };
 }
 
 async function publishDuePosts() {
