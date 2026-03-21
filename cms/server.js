@@ -52,25 +52,25 @@ app.get('/', async (req, res) => {
       totalPages,
       currentPage: page,
       currentTag: tag,
-      blogTitle: process.env.BLOG_TITLE || 'My Blog',
+      blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey',
       blogDesc: process.env.BLOG_DESCRIPTION || '',
     });
   } catch (err) {
     console.error('Blog index error:', err);
     res.render('blog/index', { posts: [], total: 0, totalPages: 0, currentPage: 1, currentTag: null,
-      blogTitle: process.env.BLOG_TITLE || 'My Blog', blogDesc: '' });
+      blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey', blogDesc: '' });
   }
 });
 
 app.get('/post/:slug', async (req, res) => {
   try {
     const post = await getPostBySlug(req.params.slug);
-    if (!post) return res.status(404).render('blog/404', { blogTitle: process.env.BLOG_TITLE || 'My Blog' });
+    if (!post) return res.status(404).render('blog/404', { blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
     post.htmlContent = marked(post.content || '');
-    res.render('blog/post', { post, blogTitle: process.env.BLOG_TITLE || 'My Blog' });
+    res.render('blog/post', { post, blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
   } catch (err) {
     console.error('Post view error:', err);
-    res.status(500).render('blog/404', { blogTitle: process.env.BLOG_TITLE || 'My Blog' });
+    res.status(500).render('blog/404', { blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
   }
 });
 
