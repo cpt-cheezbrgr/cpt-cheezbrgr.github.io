@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor – Blog CMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="/admin">Blog CMS</a></div>
+    <div class="sidebar-label">Content</div>
+    <nav>
+      <a href="/admin"><span class="icon">◈</span> Posts</a>
+      <a href="/admin/media"><span class="icon">◧</span> Media</a>
+    </nav>
+    <div class="sidebar-label">Site</div>
+    <nav>
+      <a href="/" target="_blank"><span class="icon">↗</span> View Blog</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar" id="userAvatar">—</div>
+        <span id="userLabel">Loading…</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn"><span class="icon">⎋</span> Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="pageTitle">New Post</h1>
+      <div class="topbar-actions">
+        <a href="/admin" class="btn btn-secondary">← Back</a>
+        <div class="dropdown">
+          <button class="btn btn-secondary" id="saveDropdownBtn">Save ▾</button>
+          <div class="dropdown-menu" id="saveDropdown">
+            <button id="saveDraftBtn">Save as Draft</button>
+            <button id="savePublishBtn">Publish Now</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <div class="editor-layout">
+        <!-- Main editor -->
+        <div>
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input type="text" class="form-input" id="titleInput" placeholder="Post title…">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Content</label>
+            <textarea id="mdEditor"></textarea>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="editor-sidebar">
+          <!-- Status -->
+          <div class="card">
+            <div class="card-header"><span style="font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-family:var(--font-mono)">Status</span></div>
+            <div class="card-body">
+              <div class="form-group" style="margin-bottom:0">
+                <select class="form-select" id="statusSelect">
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="scheduled">Scheduled</option>
+                </select>
+              </div>
+              <div id="scheduleGroup" style="display:none;margin-top:14px">
+                <label class="form-label">Publish at</label>
+                <input type="datetime-local" class="form-input" id="publishAtInput">
+              </div>
+            </div>
+          </div>
+
+          <!-- Excerpt -->
+          <div class="card">
+            <div class="card-header"><span style="font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-family:var(--font-mono)">Excerpt</span></div>
+            <div class="card-body">
+              <textarea class="form-textarea" id="excerptInput" rows="3" placeholder="Brief description of the post…" style="min-height:72px"></textarea>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="card">
+            <div class="card-header"><span style="font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-family:var(--font-mono)">Tags</span></div>
+            <div class="card-body">
+              <div class="tags-input-wrap" id="tagsWrap">
+                <input type="text" class="tags-input" id="tagInput" placeholder="Add tag…">
+              </div>
+              <p class="form-hint">Press Enter or comma to add a tag</p>
+            </div>
+          </div>
+
+          <!-- Cover Image -->
+          <div class="card">
+            <div class="card-header"><span style="font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-family:var(--font-mono)">Cover Image</span></div>
+            <div class="card-body">
+              <div id="coverPreview" style="display:none" class="cover-preview">
+                <img id="coverImg" src="" alt="Cover">
+                <button class="remove-cover" id="removeCoverBtn">Remove</button>
+              </div>
+              <div id="coverEmpty">
+                <button class="btn btn-secondary" style="width:100%;justify-content:center" id="chooseCoverBtn">Choose from Media</button>
+                <p class="form-hint" style="margin-top:6px">Or paste a URL:</p>
+                <input type="url" class="form-input" id="coverUrlInput" placeholder="https://…" style="margin-top:4px">
+              </div>
+            </div>
+          </div>
+
+          <!-- Slug -->
+          <div class="card">
+            <div class="card-header"><span style="font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-family:var(--font-mono)">URL Slug</span></div>
+            <div class="card-body">
+              <input type="text" class="form-input" id="slugInput" placeholder="auto-generated-from-title" style="font-family:var(--font-mono);font-size:.85rem">
+              <p class="form-hint">/post/<span id="slugPreview" style="color:var(--accent)">…</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media picker modal -->
+  <div class="modal-overlay" id="mediaModal">
+    <div class="modal" style="max-width:700px;width:100%">
+      <h2>Choose image</h2>
+      <div class="media-grid" id="mediaPickerGrid" style="margin:16px 0;max-height:400px;overflow-y:auto"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="closeMediaModal">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/admin/js/editor.js"></script>
+</body>
+</html>
