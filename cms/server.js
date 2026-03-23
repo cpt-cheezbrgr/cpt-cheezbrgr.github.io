@@ -151,6 +151,22 @@ ${postUrls}
   }
 });
 
+// ── Robots.txt ────────────────────────────────────────────────────────────────
+app.get('/robots.txt', (req, res) => {
+  const baseUrl = process.env.BLOG_URL || `${req.protocol}://${req.get('host')}`;
+  res.set('Content-Type', 'text/plain');
+  res.send(`User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: ${baseUrl}/sitemap.xml
+`);
+});
+
 // ── Auth pages ────────────────────────────────────────────────────────────────
 app.get('/login', (req, res) => {
   try {
