@@ -118,6 +118,39 @@ ${items}
   }
 });
 
+// ── Sitemap ───────────────────────────────────────────────────────────────────
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const baseUrl = process.env.BLOG_URL || `${req.protocol}://${req.get('host')}`;
+    const { posts } = await getPublishedPosts({ page: 1, limit: 1000 });
+
+    const postUrls = posts.map(post => {
+      const lastmod = post.publishedAt?.toDate ? post.publishedAt.toDate().toISOString().split('T')[0] : '';
+      return `  <url>
+    <loc>${baseUrl}/post/${post.slug}</loc>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ''}
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+    }).join('\n');
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+${postUrls}
+</urlset>`;
+
+    res.set('Content-Type', 'application/xml; charset=utf-8');
+    res.send(xml);
+  } catch (err) {
+    console.error('Sitemap error:', err);
+    res.status(500).send('Sitemap unavailable');
+  }
+});
+
 // ── Auth pages ────────────────────────────────────────────────────────────────
 app.get('/login', (req, res) => {
   try {
