@@ -74,6 +74,50 @@ app.get('/post/:slug', async (req, res) => {
   }
 });
 
+// ── RSS feed ──────────────────────────────────────────────────────────────────
+app.get('/feed.xml', async (req, res) => {
+  try {
+    const { posts } = await getPublishedPosts({ page: 1, limit: 20 });
+    const blogTitle = process.env.BLOG_TITLE || 'Magic Pixel Monkey';
+    const blogDesc = process.env.BLOG_DESCRIPTION || '';
+    const baseUrl = process.env.BLOG_URL || `${req.protocol}://${req.get('host')}`;
+
+    const escape = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+    const items = posts.map(post => {
+      const url = `${baseUrl}/post/${post.slug}`;
+      const pubDate = post.publishedAt?.toDate ? post.publishedAt.toDate().toUTCString() : '';
+      return `
+    <item>
+      <title>${escape(post.title)}</title>
+      <link>${url}</link>
+      <guid isPermaLink="true">${url}</guid>
+      <description>${escape(post.excerpt || '')}</description>
+      ${pubDate ? `<pubDate>${pubDate}</pubDate>` : ''}
+      ${(post.tags || []).map(t => `<category>${escape(t)}</category>`).join('\n      ')}
+    </item>`;
+    }).join('');
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${escape(blogTitle)}</title>
+    <link>${baseUrl}</link>
+    <description>${escape(blogDesc)}</description>
+    <language>en-us</language>
+    <atom:link href="${baseUrl}/feed.xml" rel="self" type="application/rss+xml"/>
+${items}
+  </channel>
+</rss>`;
+
+    res.set('Content-Type', 'application/rss+xml; charset=utf-8');
+    res.send(xml);
+  } catch (err) {
+    console.error('RSS feed error:', err);
+    res.status(500).send('Feed unavailable');
+  }
+});
+
 // ── Auth pages ────────────────────────────────────────────────────────────────
 app.get('/login', (req, res) => {
   try {
