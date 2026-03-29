@@ -1,6 +1,6 @@
 // ── Post editor ────────────────────────────────────────────────────────────────
 
-let mde;
+let quill;
 let postId = null;
 let tags = [];
 let coverImageUrl = null;
@@ -12,24 +12,25 @@ function getPostIdFromUrl() {
 }
 
 function initEditor() {
-  mde = new EasyMDE({
-    element: document.getElementById('mdEditor'),
-    spellChecker: false,
-    autosave: { enabled: true, uniqueId: 'cms-editor-draft', delay: 5000 },
-    toolbar: [
-      'bold', 'italic', 'heading', '|',
-      'quote', 'unordered-list', 'ordered-list', '|',
-      'link', 'image', '|',
-      'preview', 'side-by-side', 'fullscreen', '|',
-      'guide',
-    ],
-    placeholder: 'Write your post in Markdown…',
-    status: ['lines', 'words'],
+  quill = new Quill('#quillEditor', {
+    theme: 'snow',
+    placeholder: 'Write your post here…',
+    modules: {
+      toolbar: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote', 'code-block'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link', 'image'],
+        ['clean'],
+      ],
+    },
   });
 
-  // Image button — open media picker
-  mde.codemirror.on('change', () => {
-    // Autosave hint
+  // Autosave to localStorage on change
+  quill.on('text-change', () => {
+    if (postId) return; // Only autosave new (unsaved) posts
+    try { localStorage.setItem('cms-editor-draft', quill.root.innerHTML); } catch {}
   });
 }
 
@@ -70,7 +71,7 @@ function collectData() {
   return {
     title: document.getElementById('titleInput').value.trim(),
     slug,
-    content: mde.value(),
+    content: quill.root.innerHTML,
     excerpt: document.getElementById('excerptInput').value.trim(),
     status,
     publishAt: status === 'scheduled' && publishAt ? new Date(publishAt).toISOString() : null,
@@ -145,9 +146,8 @@ async function loadPost(id) {
 
   if (post.coverImage) setCover(post.coverImage);
 
-  mde.value(post.content || '');
-  // Clear autosave for this specific post
-  mde.clearAutosavedValue();
+  quill.root.innerHTML = post.content || '';
+  try { localStorage.removeItem('cms-editor-draft'); } catch {}
 }
 
 async function loadMediaForPicker() {

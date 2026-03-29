@@ -66,7 +66,9 @@ app.get('/post/:slug', async (req, res) => {
   try {
     const post = await getPostBySlug(req.params.slug);
     if (!post) return res.status(404).render('blog/404', { blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
-    post.htmlContent = marked(post.content || '');
+    const raw = post.content || '';
+    // New posts are stored as HTML (from Quill); legacy posts are Markdown
+    post.htmlContent = /^\s*</.test(raw) ? raw : marked(raw);
     res.render('blog/post', { post, blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
   } catch (err) {
     console.error('Post view error:', err);
