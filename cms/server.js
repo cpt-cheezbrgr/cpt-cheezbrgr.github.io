@@ -9,8 +9,10 @@ const authRoutes = require('./src/routes/auth');
 const postsRoutes = require('./src/routes/posts');
 const mediaRoutes = require('./src/routes/media');
 const schedulerRoutes = require('./src/routes/scheduler');
+const analyticsRoutes = require('./src/routes/analytics');
 const { requireAuth } = require('./src/middleware/auth');
 const { getPublishedPosts, getPostBySlug, initAdmin } = require('./src/services/firestore');
+const { trackPageView } = require('./src/services/analytics');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -25,11 +27,21 @@ app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Page view tracking (privacy-focused, no IP stored) ───────────────────────
+const SKIP_TRACK = /^\/admin|^\/api|^\/login|^\/forgot-password|^\/reset-password|^\/debug-|\.(?:css|js|ico|png|jpg|jpeg|gif|svg|woff2?|ttf|map)$/i;
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !SKIP_TRACK.test(req.path)) {
+    trackPageView(req); // fire-and-forget
+  }
+  next();
+});
+
 // ── API routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/posts', requireAuth, postsRoutes);
 app.use('/api/media', requireAuth, mediaRoutes);
 app.use('/api/scheduler', schedulerRoutes);
+app.use('/api/analytics', requireAuth, analyticsRoutes);
 
 // ── Temporary debug endpoint ──────────────────────────────────────────────────
 app.get('/debug-posts', async (req, res) => {
@@ -200,6 +212,9 @@ app.get('/admin/editor/:id', (req, res) =>
 
 app.get('/admin/media', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'admin', 'media.html')));
+
+app.get('/admin/analytics', (req, res) =>
+  res.sendFile(path.join(__dirname, 'public', 'admin', 'analytics.html')));
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, async () => {

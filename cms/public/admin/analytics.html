@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics – Blog CMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    .analytics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    @media (max-width: 640px) { .analytics-grid { grid-template-columns: 1fr 1fr; } }
+
+    .chart-wrap { display: flex; align-items: flex-end; gap: 3px; height: 80px; padding: 0 2px; }
+    .chart-bar { flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: var(--accent); opacity: .7; transition: opacity .15s; cursor: default; position: relative; }
+    .chart-bar:hover { opacity: 1; }
+    .chart-bar[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #fff;
+      font-size: .7rem;
+      padding: 3px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+
+    .stat-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    .stat-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); }
+    .stat-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--accent); }
+    .stat-table tr:last-child td { border-bottom: none; }
+
+    .device-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: .875rem; }
+    .device-bar-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .device-bar { height: 100%; border-radius: 4px; background: var(--accent); }
+    .device-label { width: 60px; color: var(--text-muted); }
+    .device-pct { width: 38px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+    .range-select { font-size: .8rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .section-title { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); font-family: var(--font-mono); }
+    .privacy-note { font-size: .75rem; color: var(--text-muted); margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><a href="/admin">Blog CMS</a></div>
+    <div class="sidebar-label">Content</div>
+    <nav>
+      <a href="/admin"><span class="icon">◈</span> Posts</a>
+      <a href="/admin/media"><span class="icon">◧</span> Media</a>
+    </nav>
+    <div class="sidebar-label">Site</div>
+    <nav>
+      <a href="/admin/analytics" class="active"><span class="icon">◉</span> Analytics</a>
+      <a href="/" target="_blank"><span class="icon">↗</span> View Blog</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="avatar" id="userAvatar">—</div>
+        <span id="userLabel">Loading…</span>
+      </div>
+      <button class="logout-btn" id="logoutBtn"><span class="icon">⎋</span> Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h1>Analytics</h1>
+      <div class="topbar-actions">
+        <select class="range-select" id="rangeSelect">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- Summary stats -->
+      <div class="analytics-grid" id="summaryCards">
+        <div class="stat-card"><div class="stat-label">Total visits</div><div class="stat-value" id="statTotal">–</div></div>
+        <div class="stat-card success"><div class="stat-label">This week</div><div class="stat-value" id="statWeek">–</div></div>
+        <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value" id="statToday">–</div></div>
+      </div>
+
+      <!-- Daily chart -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <span class="section-title">Daily visits</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap" id="dailyChart">
+            <div style="color:var(--text-muted);font-size:.875rem"><span class="spinner"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pages + Referrers -->
+      <div class="two-col" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-header"><span class="section-title">Top pages</span></div>
+          <div class="card-body">
+            <table class="stat-table" id="pagesTable">
+              <tr><td colspan="2" style="color:var(--text-muted)"><span class="spinner"></span></td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="section-title">Top referrers</span></div>
+          <div class="card-body">
+            <table class="stat-table" id="referrersTable">
+              <tr><td colspan="2" style="color:var(--text-muted)"><span class="spinner"></span></td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Devices -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header"><span class="section-title">Devices</span></div>
+        <div class="card-body" id="devicesPanel">
+          <div style="color:var(--text-muted)"><span class="spinner"></span></div>
+        </div>
+      </div>
+
+      <p class="privacy-note">
+        No cookies. No IP addresses stored. Referrers are domain-only.
+        Raw user-agents are discarded — only device type (desktop / mobile / tablet) is recorded.
+      </p>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toasts"></div>
+  <script src="/js/api.js"></script>
+  <script src="/admin/js/analytics.js"></script>
+</body>
+</html>
