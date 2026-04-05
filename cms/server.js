@@ -4,6 +4,8 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const jwt = require('jsonwebtoken');
 const { marked } = require('marked');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const authRoutes = require('./src/routes/auth');
 const postsRoutes = require('./src/routes/posts');
@@ -23,7 +25,32 @@ marked.setOptions({ breaks: true });
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'src/views'));
 
-app.use(express.json({ limit: '10mb' }));
+// ── Security headers ──────────────────────────────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "cdn.quilljs.com", "fonts.googleapis.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "cdn.quilljs.com", "fonts.googleapis.com"],
+      fontSrc: ["'self'", "fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https://storage.googleapis.com"],
+      connectSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // needed for Google Fonts
+}));
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts, please try again later.' },
+});
+
+app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -37,20 +64,11 @@ app.use((req, res, next) => {
 });
 
 // ── API routes ────────────────────────────────────────────────────────────────
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/posts', requireAuth, postsRoutes);
 app.use('/api/media', requireAuth, mediaRoutes);
 app.use('/api/scheduler', schedulerRoutes);
 app.use('/api/analytics', requireAuth, analyticsRoutes);
-
-// ── Temporary debug endpoint ──────────────────────────────────────────────────
-app.get('/debug-posts', async (req, res) => {
-  const { Firestore } = require('@google-cloud/firestore');
-  const db2 = new Firestore({ projectId: process.env.GCP_PROJECT_ID });
-  const snap = await db2.collection('posts').get();
-  const posts = snap.docs.map(d => ({ id: d.id, status: d.data().status, slug: d.data().slug, publishedAt: d.data().publishedAt?.toDate?.()?.toISOString() }));
-  res.json({ count: posts.length, posts });
-});
 
 // ── Public blog (server-side rendered) ───────────────────────────────────────
 app.get('/', async (req, res) => {

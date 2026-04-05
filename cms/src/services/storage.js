@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const storage = new Storage({ projectId: process.env.GCP_PROJECT_ID });
 const bucket = storage.bucket(process.env.GCS_BUCKET_NAME);
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 async function uploadFile(fileBuffer, originalName, mimeType) {
