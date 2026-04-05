@@ -183,13 +183,31 @@ main.container { padding-top: 48px; padding-bottom: 80px; }
 .back-link:hover { color: var(--accent); }
 
 /* ── Error Page ───────────────────────────────────────────────────────────── */
-.error-page { text-align: center; padding: 80px 0; }
+.error-page-bg {
+  min-height: 60vh;
+  background: url('https://storage.googleapis.com/blog-cms-media/media/688d70e0-14f3-4ba8-b007-9293f93149da.jpg') center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  margin: 40px 0;
+}
+.error-page {
+  text-align: center;
+  padding: 60px 40px;
+  background: rgba(0,0,0,0.55);
+  border-radius: 12px;
+  backdrop-filter: blur(4px);
+}
+.error-page .error-code,
+.error-page h1,
+.error-page p { color: #fff; }
 .error-code {
   display: block; font-size: 5rem; font-family: var(--font-mono);
-  font-weight: 500; color: var(--accent); line-height: 1; margin-bottom: 16px;
+  font-weight: 500; line-height: 1; margin-bottom: 16px;
 }
 .error-page h1 { font-size: 1.5rem; margin-bottom: 8px; }
-.error-page p { color: var(--text-muted); margin-bottom: 24px; }
+.error-page p { margin-bottom: 24px; opacity: 0.85; }
 .btn-primary {
   display: inline-block; padding: 10px 20px;
   background: var(--accent); color: #fff;
