@@ -237,6 +237,11 @@ app.get('/admin/media', (req, res) =>
 app.get('/admin/analytics', (req, res) =>
   res.sendFile(path.join(__dirname, 'public', 'admin', 'analytics.html')));
 
+// ── 404 catch-all ─────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).render('blog/404', { blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, async () => {
   console.log(`Blog CMS running on port ${PORT}`);
