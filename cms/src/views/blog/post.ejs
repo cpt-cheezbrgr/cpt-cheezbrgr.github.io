@@ -4,8 +4,50 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= post.title %> – <%= blogTitle %></title>
-  <% if (post.excerpt) { %><meta name="description" content="<%= post.excerpt %>"><% } %>
+  <% if (post.excerpt) { %>
+  <meta name="description" content="<%= post.excerpt %>">
+  <% } %>
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="<%= blogUrl %>/post/<%= post.slug %>">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="<%= blogTitle %>">
+  <meta property="og:title" content="<%= post.title %>">
+  <meta property="og:url" content="<%= blogUrl %>/post/<%= post.slug %>">
+  <% if (post.excerpt) { %><meta property="og:description" content="<%= post.excerpt %>"><% } %>
   <% if (post.coverImage) { %><meta property="og:image" content="<%= post.coverImage %>"><% } %>
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="<%= post.coverImage ? 'summary_large_image' : 'summary' %>">
+  <meta name="twitter:title" content="<%= post.title %>">
+  <% if (post.excerpt) { %><meta name="twitter:description" content="<%= post.excerpt %>"><% } %>
+  <% if (post.coverImage) { %><meta name="twitter:image" content="<%= post.coverImage %>"><% } %>
+
+  <!-- Article JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "<%= post.title.replace(/"/g, '&quot;') %>",
+    "url": "<%= blogUrl %>/post/<%= post.slug %>",
+    "description": "<%= (post.excerpt || '').replace(/"/g, '&quot;') %>",
+    "datePublished": "<%= post.publishedAt?.toDate ? post.publishedAt.toDate().toISOString() : '' %>",
+    "dateModified": "<%= post.updatedAt?.toDate ? post.updatedAt.toDate().toISOString() : (post.publishedAt?.toDate ? post.publishedAt.toDate().toISOString() : '') %>",
+    <% if (post.coverImage) { %>"image": "<%= post.coverImage %>",<% } %>
+    "publisher": {
+      "@type": "Organization",
+      "name": "<%= blogTitle %>"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "<%= blogUrl %>/post/<%= post.slug %>"
+    }
+  }
+  </script>
+
+  <link rel="alternate" type="application/rss+xml" title="<%= blogTitle %>" href="/feed.xml">
   <link rel="stylesheet" href="/css/blog.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">

@@ -58,6 +58,7 @@ app.get('/', async (req, res) => {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const tag = req.query.tag || null;
     const { posts, total, totalPages } = await getPublishedPosts({ page, limit: 8, tag });
+    const blogUrl = process.env.BLOG_URL || `${req.protocol}://${req.get('host')}`;
     res.render('blog/index', {
       posts,
       total,
@@ -66,22 +67,24 @@ app.get('/', async (req, res) => {
       currentTag: tag,
       blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey',
       blogDesc: process.env.BLOG_DESCRIPTION || '',
+      blogUrl,
     });
   } catch (err) {
     console.error('Blog index error:', err);
     res.render('blog/index', { posts: [], total: 0, totalPages: 0, currentPage: 1, currentTag: null,
-      blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey', blogDesc: '' });
+      blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey', blogDesc: '', blogUrl: process.env.BLOG_URL || '' });
   }
 });
 
 app.get('/post/:slug', async (req, res) => {
   try {
     const post = await getPostBySlug(req.params.slug);
+    const blogUrl = process.env.BLOG_URL || `${req.protocol}://${req.get('host')}`;
     if (!post) return res.status(404).render('blog/404', { blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
     const raw = post.content || '';
     // New posts are stored as HTML (from Quill); legacy posts are Markdown
     post.htmlContent = /^\s*</.test(raw) ? raw : marked(raw);
-    res.render('blog/post', { post, blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
+    res.render('blog/post', { post, blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey', blogUrl });
   } catch (err) {
     console.error('Post view error:', err);
     res.status(500).render('blog/404', { blogTitle: process.env.BLOG_TITLE || 'Magic Pixel Monkey' });
