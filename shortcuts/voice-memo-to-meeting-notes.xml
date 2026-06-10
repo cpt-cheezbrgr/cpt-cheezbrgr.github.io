@@ -1,0 +1,622 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+	<key>WFWorkflowActions</key>
+	<array>
+
+		<!-- ── 0. API Key placeholder (filled in at import time) ───────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A0000000-0000-0000-0000-000000000000</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict/>
+						<key>string</key>
+						<string>PASTE_YOUR_ANTHROPIC_API_KEY_HERE</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- ── 1. Store API key ────────────────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A1000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>APIKey</string>
+			</dict>
+		</dict>
+
+		<!-- ── 2. Ask user to paste transcript ────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.askforinput</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A2000000-0000-0000-0000-000000000000</string>
+				<key>WFAskActionPrompt</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict/>
+						<key>string</key>
+						<string>Paste your Voice Memo transcript:</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+				<key>WFInputType</key>
+				<string>Text</string>
+			</dict>
+		</dict>
+
+		<!-- ── 3. Store raw transcript ────────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A3000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>RawTranscript</string>
+			</dict>
+		</dict>
+
+		<!-- ── 4. Escape double-quotes for JSON ───────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text.replace</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A4000000-0000-0000-0000-000000000000</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>RawTranscript</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFReplaceTextPattern</key>
+				<string>&quot;</string>
+				<key>WFReplaceTextReplacementText</key>
+				<string>\&quot;</string>
+				<key>WFReplaceTextRegularExpression</key>
+				<false/>
+				<key>WFReplaceTextCaseSensitive</key>
+				<false/>
+			</dict>
+		</dict>
+
+		<!-- ── 5. Store quote-escaped transcript ──────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A5000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>QuoteEscaped</string>
+			</dict>
+		</dict>
+
+		<!-- ── 6. Escape real newlines → \n for JSON ──────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text.replace</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A6000000-0000-0000-0000-000000000000</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>QuoteEscaped</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFReplaceTextPattern</key>
+				<string>\n</string>
+				<key>WFReplaceTextReplacementText</key>
+				<string>\n</string>
+				<key>WFReplaceTextRegularExpression</key>
+				<true/>
+				<key>WFReplaceTextCaseSensitive</key>
+				<false/>
+			</dict>
+		</dict>
+
+		<!-- ── 7. Store fully-escaped transcript ──────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A7000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>EscapedTranscript</string>
+			</dict>
+		</dict>
+
+		<!-- ── 8. JSON body prefix (up to the transcript slot) ────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A8000000-0000-0000-0000-000000000000</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict/>
+						<key>string</key>
+						<string>{"model":"claude-opus-4-8","max_tokens":2048,"messages":[{"role":"user","content":"Please summarize the following voice recording transcript into structured meeting notes.\n\nUse exactly these sections:\n\n## Meeting Summary\nA concise 2-3 sentence overview of what was discussed.\n\n## Key Discussion Points\n- Bullet each main topic or discussion thread\n\n## Action Items\n- List every task, commitment, or follow-up mentioned\n\n## Key Takeaways\n- The most important conclusions or decisions\n\nTranscript:\n</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- ── 9. Store prefix ─────────────────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>A9000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>JSONPrefix</string>
+			</dict>
+		</dict>
+
+		<!-- ── 10. JSON body suffix ───────────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>AA000000-0000-0000-0000-000000000000</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict/>
+						<key>string</key>
+						<string>"}]}</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- ── 11. Store suffix ───────────────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>AB000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>JSONSuffix</string>
+			</dict>
+		</dict>
+
+		<!-- ── 12. Assemble full JSON body: Prefix + Transcript + Suffix  -->
+		<!--        ￼ = U+FFFC Object Replacement Character (variable slot) -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.text</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>AC000000-0000-0000-0000-000000000000</string>
+				<key>WFTextActionText</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>Type</key>
+								<string>Variable</string>
+								<key>VariableName</key>
+								<string>JSONPrefix</string>
+							</dict>
+							<key>{1, 1}</key>
+							<dict>
+								<key>Type</key>
+								<string>Variable</string>
+								<key>VariableName</key>
+								<string>EscapedTranscript</string>
+							</dict>
+							<key>{2, 1}</key>
+							<dict>
+								<key>Type</key>
+								<string>Variable</string>
+								<key>VariableName</key>
+								<string>JSONSuffix</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>&#xFFFC;&#xFFFC;&#xFFFC;</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- ── 13. Store assembled body ──────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>AD000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>RequestBody</string>
+			</dict>
+		</dict>
+
+		<!-- ── 14. POST to Claude API ─────────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.downloadurl</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>AE000000-0000-0000-0000-000000000000</string>
+				<key>WFURL</key>
+				<string>https://api.anthropic.com/v1/messages</string>
+				<key>WFHTTPMethod</key>
+				<string>POST</string>
+				<key>WFHTTPBodyType</key>
+				<string>File</string>
+				<key>WFHTTPRequestBody</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>RequestBody</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFHTTPHeaders</key>
+				<dict>
+					<key>Value</key>
+					<array>
+						<dict>
+							<key>WFItemType</key>
+							<integer>0</integer>
+							<key>WFKey</key>
+							<dict>
+								<key>Value</key>
+								<dict>
+									<key>attachmentsByRange</key>
+									<dict/>
+									<key>string</key>
+									<string>x-api-key</string>
+								</dict>
+								<key>WFSerializationType</key>
+								<string>WFTextTokenString</string>
+							</dict>
+							<key>WFValue</key>
+							<dict>
+								<key>Value</key>
+								<dict>
+									<key>attachmentsByRange</key>
+									<dict>
+										<key>{0, 1}</key>
+										<dict>
+											<key>Type</key>
+											<string>Variable</string>
+											<key>VariableName</key>
+											<string>APIKey</string>
+										</dict>
+									</dict>
+									<key>string</key>
+									<string>&#xFFFC;</string>
+								</dict>
+								<key>WFSerializationType</key>
+								<string>WFTextTokenString</string>
+							</dict>
+						</dict>
+						<dict>
+							<key>WFItemType</key>
+							<integer>0</integer>
+							<key>WFKey</key>
+							<dict>
+								<key>Value</key>
+								<dict>
+									<key>attachmentsByRange</key>
+									<dict/>
+									<key>string</key>
+									<string>anthropic-version</string>
+								</dict>
+								<key>WFSerializationType</key>
+								<string>WFTextTokenString</string>
+							</dict>
+							<key>WFValue</key>
+							<dict>
+								<key>Value</key>
+								<dict>
+									<key>attachmentsByRange</key>
+									<dict/>
+									<key>string</key>
+									<string>2023-06-01</string>
+								</dict>
+								<key>WFSerializationType</key>
+								<string>WFTextTokenString</string>
+							</dict>
+						</dict>
+						<dict>
+							<key>WFItemType</key>
+							<integer>0</integer>
+							<key>WFKey</key>
+							<dict>
+								<key>Value</key>
+								<dict>
+									<key>attachmentsByRange</key>
+									<dict/>
+									<key>string</key>
+									<string>content-type</string>
+								</dict>
+								<key>WFSerializationType</key>
+								<string>WFTextTokenString</string>
+							</dict>
+							<key>WFValue</key>
+							<dict>
+								<key>Value</key>
+								<dict>
+									<key>attachmentsByRange</key>
+									<dict/>
+									<key>string</key>
+									<string>application/json</string>
+								</dict>
+								<key>WFSerializationType</key>
+								<string>WFTextTokenString</string>
+							</dict>
+						</dict>
+					</array>
+					<key>WFSerializationType</key>
+					<string>WFDictionaryFieldValue</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- ── 15. Store raw API response ────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>AF000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>APIResponse</string>
+			</dict>
+		</dict>
+
+		<!-- ── 16. Drill into response: get "content" array ─────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.getdictionaryvalue</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B0000000-0000-0000-0000-000000000000</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>APIResponse</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+				<key>WFGetDictionaryValueType</key>
+				<string>Value</string>
+				<key>WFDictionaryKey</key>
+				<string>content</string>
+			</dict>
+		</dict>
+
+		<!-- ── 17. Get first item in content array ───────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.getitemfromlist</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B1000000-0000-0000-0000-000000000000</string>
+				<key>WFItemSpecifier</key>
+				<string>First Item</string>
+			</dict>
+		</dict>
+
+		<!-- ── 18. Extract "text" field from first content block ──────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.getdictionaryvalue</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B2000000-0000-0000-0000-000000000000</string>
+				<key>WFGetDictionaryValueType</key>
+				<string>Value</string>
+				<key>WFDictionaryKey</key>
+				<string>text</string>
+			</dict>
+		</dict>
+
+		<!-- ── 19. Store final meeting notes ─────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setvariable</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B3000000-0000-0000-0000-000000000000</string>
+				<key>WFVariableName</key>
+				<string>MeetingNotes</string>
+			</dict>
+		</dict>
+
+		<!-- ── 20. Copy meeting notes to clipboard ───────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.setclipboard</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B4000000-0000-0000-0000-000000000000</string>
+				<key>WFInput</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>Type</key>
+						<string>Variable</string>
+						<key>VariableName</key>
+						<string>MeetingNotes</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenAttachment</string>
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- ── 21. Display result ─────────────────────────────────────── -->
+		<dict>
+			<key>WFWorkflowActionIdentifier</key>
+			<string>is.workflow.actions.showresult</string>
+			<key>WFWorkflowActionParameters</key>
+			<dict>
+				<key>UUID</key>
+				<string>B5000000-0000-0000-0000-000000000000</string>
+				<key>Text</key>
+				<dict>
+					<key>Value</key>
+					<dict>
+						<key>attachmentsByRange</key>
+						<dict>
+							<key>{0, 1}</key>
+							<dict>
+								<key>Type</key>
+								<string>Variable</string>
+								<key>VariableName</key>
+								<string>MeetingNotes</string>
+							</dict>
+						</dict>
+						<key>string</key>
+						<string>&#xFFFC;</string>
+					</dict>
+					<key>WFSerializationType</key>
+					<string>WFTextTokenString</string>
+				</dict>
+			</dict>
+		</dict>
+
+	</array>
+
+	<!-- ── Shortcut metadata ──────────────────────────────────────────── -->
+
+	<key>WFWorkflowClientVersion</key>
+	<string>2600.0</string>
+
+	<key>WFWorkflowHasShortcutInputVariables</key>
+	<true/>
+
+	<key>WFWorkflowIcon</key>
+	<dict>
+		<!-- Notepad glyph, blue gradient -->
+		<key>WFWorkflowIconGlyphNumber</key>
+		<integer>59511</integer>
+		<key>WFWorkflowIconStartColor</key>
+		<integer>431817727</integer>
+	</dict>
+
+	<key>WFWorkflowImportQuestions</key>
+	<array>
+		<dict>
+			<key>ActionIndex</key>
+			<integer>0</integer>
+			<key>Category</key>
+			<string>Parameter</string>
+			<key>DefaultValue</key>
+			<string></string>
+			<key>ParameterKey</key>
+			<string>WFTextActionText</string>
+			<key>Text</key>
+			<string>Enter your Anthropic API key (starts with sk-ant-…)</string>
+		</dict>
+	</array>
+
+	<key>WFWorkflowInputContentItemClasses</key>
+	<array>
+		<string>WFStringContentItem</string>
+	</array>
+
+	<key>WFWorkflowMinimumClientVersion</key>
+	<string>900</string>
+
+	<key>WFWorkflowName</key>
+	<string>Voice Memo → Meeting Notes</string>
+
+	<key>WFWorkflowTypes</key>
+	<array>
+		<string>NCWidget</string>
+		<string>WatchKit</string>
+	</array>
+
+	<key>WFQuickActionSurfaces</key>
+	<array/>
+
+</dict>
+</plist>
