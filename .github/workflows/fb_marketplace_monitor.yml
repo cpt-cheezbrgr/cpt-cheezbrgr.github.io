@@ -1,0 +1,59 @@
+name: Facebook Marketplace – Vision Pro Monitor
+
+# Runs daily at 9 AM Eastern (14:00 UTC).
+# Trigger manually via Actions → "Run workflow" to test immediately.
+#
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#   FB_EMAIL           – Facebook account email
+#   FB_PASSWORD        – Facebook account password
+#   EMAIL_FROM         – Gmail address that sends the alert (e.g. you@gmail.com)
+#   EMAIL_APP_PASSWORD – Gmail App Password for EMAIL_FROM
+#                        Generate at: myaccount.google.com/apppasswords
+#   EMAIL_TO           – Where alerts are delivered (e.g. sparklin.karas@gmail.com)
+
+on:
+  schedule:
+    - cron: '0 14 * * *'   # 9 AM ET / 14:00 UTC
+  workflow_dispatch:        # manual trigger for testing
+
+jobs:
+  monitor:
+    name: Scan & Notify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # needed to commit seen_listings.json back
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: pip install playwright
+
+      - name: Install Playwright browsers
+        run: playwright install chromium --with-deps
+
+      - name: Run marketplace monitor
+        env:
+          FB_EMAIL:           ${{ secrets.FB_EMAIL }}
+          FB_PASSWORD:        ${{ secrets.FB_PASSWORD }}
+          EMAIL_FROM:         ${{ secrets.EMAIL_FROM }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          EMAIL_TO:           ${{ secrets.EMAIL_TO }}
+        run: python scripts/fb_marketplace_monitor.py
+
+      - name: Commit updated seen-listings file
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name  "github-actions[bot]"
+          git add scripts/seen_listings.json
+          # Only commit if the file actually changed
+          git diff --staged --quiet || git commit -m "chore: update seen listings [skip ci]"
+          git push
