@@ -126,27 +126,37 @@ async function getPostBySlug(slug) {
 }
 
 async function listPosts({ status, tag, search, page = 1, limit = 20 } = {}) {
-  let query = db.collection(POSTS).orderBy('createdAt', 'desc');
+  // When filters are applied, orderBy on a different field requires a composite
+  // index. Avoid that by fetching filtered docs and sorting in memory.
+  if (status || tag || search) {
+    let query = db.collection(POSTS);
+    if (status) query = query.where('status', '==', status);
+    if (tag) query = query.where('tags', 'array-contains', tag);
 
-  if (status) query = query.where('status', '==', status);
-  if (tag) query = query.where('tags', 'array-contains', tag);
+    const snap = await query.get();
+    let posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  const countSnap = await query.count().get();
-  const total = countSnap.data().count;
+    posts.sort((a, b) => (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
 
-  const offset = (page - 1) * limit;
-  const snap = await query.offset(offset).limit(limit).get();
+    if (search) {
+      const q = search.toLowerCase();
+      posts = posts.filter(p =>
+        p.title?.toLowerCase().includes(q) ||
+        p.excerpt?.toLowerCase().includes(q)
+      );
+    }
 
-  let posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  if (search) {
-    const q = search.toLowerCase();
-    posts = posts.filter(p =>
-      p.title?.toLowerCase().includes(q) ||
-      p.excerpt?.toLowerCase().includes(q)
-    );
+    const total = posts.length;
+    const offset = (page - 1) * limit;
+    return { posts: posts.slice(offset, offset + limit), total, totalPages: Math.ceil(total / limit) };
   }
 
+  // No filters — safe to use orderBy alone
+  const query = db.collection(POSTS).orderBy('createdAt', 'desc');
+  const countSnap = await query.count().get();
+  const total = countSnap.data().count;
+  const snap = await query.offset((page - 1) * limit).limit(limit).get();
+  const posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
   return { posts, total, totalPages: Math.ceil(total / limit) };
 }
 

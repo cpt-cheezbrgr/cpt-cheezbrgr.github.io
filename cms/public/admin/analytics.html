@@ -30,6 +30,26 @@
       z-index: 10;
     }
 
+    .hourly-wrap { display: flex; align-items: flex-end; gap: 2px; height: 60px; padding: 0 2px; }
+    .hourly-bar { flex: 1; min-width: 0; border-radius: 2px 2px 0 0; background: var(--accent); opacity: .6; transition: opacity .15s; position: relative; }
+    .hourly-bar:hover { opacity: 1; }
+    .hourly-bar[title]:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      color: #fff;
+      font-size: .7rem;
+      padding: 3px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .hourly-labels { display: flex; justify-content: space-between; margin-top: 4px; font-size: .7rem; color: var(--text-muted); font-family: var(--font-mono); padding: 0 2px; }
+
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
 
@@ -37,6 +57,8 @@
     .stat-table td { padding: 8px 4px; border-bottom: 1px solid var(--border); }
     .stat-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--accent); }
     .stat-table tr:last-child td { border-bottom: none; }
+    .stat-table .ref-link { color: var(--text); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
+    .stat-table .ref-link:hover { color: var(--accent); text-decoration-color: var(--accent); }
 
     .device-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; font-size: .875rem; }
     .device-bar-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
@@ -44,8 +66,12 @@
     .device-label { width: 60px; color: var(--text-muted); }
     .device-pct { width: 38px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 
-    .range-select { font-size: .8rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .date-range { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .date-input { font-size: .8rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; font-family: var(--font-mono); }
+    .quick-btns { display: flex; gap: 4px; }
+    .quick-btn { font-size: .75rem; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); cursor: pointer; }
+    .quick-btn:hover, .quick-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
     .section-title { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); font-family: var(--font-mono); }
     .privacy-note { font-size: .75rem; color: var(--text-muted); margin-top: 8px; }
   </style>
@@ -76,17 +102,22 @@
     <div class="topbar">
       <h1>Analytics</h1>
       <div class="topbar-actions">
-        <select class="range-select" id="rangeSelect">
-          <option value="7">Last 7 days</option>
-          <option value="30" selected>Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
+        <div class="date-range">
+          <div class="quick-btns">
+            <button class="quick-btn" data-days="7">7d</button>
+            <button class="quick-btn active" data-days="30">30d</button>
+            <button class="quick-btn" data-days="90">90d</button>
+          </div>
+          <input type="date" class="date-input" id="fromDate">
+          <span style="color:var(--text-muted);font-size:.8rem">to</span>
+          <input type="date" class="date-input" id="toDate">
+        </div>
       </div>
     </div>
 
     <div class="page-content">
       <!-- Summary stats -->
-      <div class="analytics-grid" id="summaryCards">
+      <div class="analytics-grid">
         <div class="stat-card"><div class="stat-label">Total visits</div><div class="stat-value" id="statTotal">–</div></div>
         <div class="stat-card success"><div class="stat-label">This week</div><div class="stat-value" id="statWeek">–</div></div>
         <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value" id="statToday">–</div></div>
@@ -94,12 +125,23 @@
 
       <!-- Daily chart -->
       <div class="card" style="margin-bottom:16px">
-        <div class="card-header">
-          <span class="section-title">Daily visits</span>
-        </div>
+        <div class="card-header"><span class="section-title">Daily visits</span></div>
         <div class="card-body">
           <div class="chart-wrap" id="dailyChart">
             <div style="color:var(--text-muted);font-size:.875rem"><span class="spinner"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time of day -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header"><span class="section-title">Time of day <span style="font-weight:400;text-transform:none;letter-spacing:0;font-family:var(--font-sans)">(UTC)</span></span></div>
+        <div class="card-body">
+          <div class="hourly-wrap" id="hourlyChart">
+            <div style="color:var(--text-muted);font-size:.875rem"><span class="spinner"></span></div>
+          </div>
+          <div class="hourly-labels">
+            <span>12am</span><span>6am</span><span>12pm</span><span>6pm</span><span>11pm</span>
           </div>
         </div>
       </div>
@@ -132,10 +174,20 @@
         </div>
       </div>
 
-      <p class="privacy-note">
-        No cookies. No IP addresses stored. Referrers are domain-only.
-        Raw user-agents are discarded — only device type (desktop / mobile / tablet) is recorded.
-      </p>
+      <p class="privacy-note">No cookies. No IP addresses stored. Referrers are domain-only. Raw user-agents are discarded — only device type is recorded.</p>
+    </div>
+  </div>
+
+  <!-- Referrer drilldown modal -->
+  <div class="modal-overlay" id="referrerModal">
+    <div class="modal" style="max-width:480px;width:100%">
+      <h2 id="referrerModalTitle">Pages from …</h2>
+      <table class="stat-table" id="referrerModalTable" style="margin-top:12px">
+        <tr><td colspan="2" style="color:var(--text-muted)"><span class="spinner"></span></td></tr>
+      </table>
+      <div class="modal-actions" style="margin-top:16px">
+        <button class="btn btn-secondary" id="closeReferrerModal">Close</button>
+      </div>
     </div>
   </div>
 
