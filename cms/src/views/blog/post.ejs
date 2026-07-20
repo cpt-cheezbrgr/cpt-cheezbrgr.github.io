@@ -97,5 +97,9 @@
       <p>&copy; <%= new Date().getFullYear() %> <%= blogTitle %></p>
     </div>
   </footer>
+
+  <% if (post.htmlContent && post.htmlContent.includes('twitter-tweet')) { %>
+  <script async src="https://platform.twitter.com/widgets.js"></script>
+  <% } %>
 </body>
 </html>

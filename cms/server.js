@@ -30,15 +30,22 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com", "platform.twitter.com"],
       styleSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "fonts.googleapis.com"],
       fontSrc: ["'self'", "fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https://storage.googleapis.com"],
-      connectSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      imgSrc: ["'self'", "data:", "https://storage.googleapis.com", "https://pbs.twimg.com", "https://abs.twimg.com"],
+      connectSrc: ["'self'", "https://syndication.twitter.com"],
+      frameSrc: [
+        "https://platform.twitter.com",
+        "https://datawrapper.dwcdn.net",
+        "https://public.flourish.studio",
+        "https://www.youtube.com",
+        "https://player.vimeo.com",
+        "https://e.infogram.com",
+      ],
     },
   },
-  crossOriginEmbedderPolicy: false, // needed for Google Fonts
+  crossOriginEmbedderPolicy: false,
 }));
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────

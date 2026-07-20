@@ -27,11 +27,35 @@ function initEditor() {
     },
   });
 
-  // Autosave to localStorage on change
-  quill.on('text-change', () => {
-    if (postId) return; // Only autosave new (unsaved) posts
-    try { localStorage.setItem('cms-editor-draft', quill.root.innerHTML); } catch {}
+  // Smart quotes
+  quill.on('text-change', (delta, _old, source) => {
+    if (source === 'user') applySmartQuotes(delta);
+    if (!postId) {
+      try { localStorage.setItem('cms-editor-draft', quill.root.innerHTML); } catch {}
+    }
   });
+}
+
+function applySmartQuotes(delta) {
+  let pos = 0;
+  for (const op of delta.ops) {
+    if (op.retain) { pos += op.retain; continue; }
+    if (typeof op.insert !== 'string') continue;
+    for (let i = 0; i < op.insert.length; i++) {
+      const ch = op.insert[i];
+      if (ch !== '"' && ch !== "'") { pos++; continue; }
+      const before = quill.getText(0, pos);
+      const prev = before[before.length - 1] || '';
+      const isOpening = /^$|[\s(\[{'"«]$/.test(prev);
+      const replacement = ch === '"'
+        ? (isOpening ? '“' : '”')
+        : (isOpening ? '‘' : '’');
+      quill.deleteText(pos, 1, 'silent');
+      quill.insertText(pos, replacement, 'silent');
+      quill.setSelection(pos + 1, 0, 'silent');
+      pos++;
+    }
+  }
 }
 
 function renderTags() {
@@ -255,4 +279,59 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault(); savePost();
     }
   });
+
+  // ── Embed modal ─────────────────────────────────────────────────────────────
+  let embedCursorIndex = null;
+
+  document.getElementById('embedBtn').addEventListener('click', () => {
+    embedCursorIndex = quill.getSelection()?.index ?? quill.getLength();
+    document.getElementById('tweetUrlInput').value = '';
+    document.getElementById('embedCodeInput').value = '';
+    document.getElementById('embedModal').classList.add('open');
+  });
+
+  document.querySelectorAll('.embed-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.embed-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('embedTabTweet').style.display = btn.dataset.tab === 'tweet' ? '' : 'none';
+      document.getElementById('embedTabCode').style.display = btn.dataset.tab === 'code' ? '' : 'none';
+    });
+  });
+
+  document.getElementById('cancelEmbedBtn').addEventListener('click', () =>
+    document.getElementById('embedModal').classList.remove('open'));
+
+  document.getElementById('confirmEmbedBtn').addEventListener('click', () => {
+    const activeTab = document.querySelector('.embed-tab.active').dataset.tab;
+    let html = null;
+
+    if (activeTab === 'tweet') {
+      const url = document.getElementById('tweetUrlInput').value.trim();
+      const tweetId = parseTweetId(url);
+      if (!tweetId) { showToast('Invalid Twitter / X URL', 'error'); return; }
+      html = `<div class="embed-tweet"><blockquote class="twitter-tweet" data-dnt="true"><a href="https://twitter.com/i/status/${tweetId}"></a></blockquote></div><p><br></p>`;
+    } else {
+      const code = document.getElementById('embedCodeInput').value.trim();
+      html = validateEmbedCode(code);
+      if (!html) { showToast('Only iframe embed codes are allowed', 'error'); return; }
+      html = `<div class="embed-block">${html}</div><p><br></p>`;
+    }
+
+    const idx = embedCursorIndex ?? quill.getLength();
+    quill.clipboard.dangerouslyPasteHTML(idx, html, 'user');
+    quill.setSelection(idx + 1, 0, 'silent');
+    document.getElementById('embedModal').classList.remove('open');
+  });
 });
+
+function parseTweetId(url) {
+  const m = url.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/);
+  return m ? m[1] : null;
+}
+
+function validateEmbedCode(code) {
+  if (!code.trim().startsWith('<iframe')) return null;
+  if (/<script/i.test(code)) return null;
+  return code;
+}

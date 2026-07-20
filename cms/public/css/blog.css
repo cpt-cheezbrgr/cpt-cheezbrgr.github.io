@@ -219,6 +219,11 @@ main.container { padding-top: 48px; padding-bottom: 80px; }
 /* ── Empty State ──────────────────────────────────────────────────────────── */
 .empty-state { text-align: center; padding: 80px 0; color: var(--text-muted); }
 
+/* ── Embeds ───────────────────────────────────────────────────────────────── */
+.embed-tweet, .embed-block { margin: 1.5rem 0; display: flex; justify-content: center; }
+.embed-tweet .twitter-tweet { margin: 0 auto !important; }
+.embed-block iframe { max-width: 100%; border: none; border-radius: 8px; }
+
 /* ── Footer ───────────────────────────────────────────────────────────────── */
 .blog-footer {
   border-top: 1px solid var(--border);

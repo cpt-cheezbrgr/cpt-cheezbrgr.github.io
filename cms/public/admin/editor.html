@@ -58,6 +58,9 @@
           <div class="form-group">
             <label class="form-label">Content</label>
             <div id="quillEditor" style="min-height:360px;background:#fff;font-size:1rem"></div>
+            <div style="margin-top:8px">
+              <button type="button" class="btn btn-secondary" id="embedBtn" style="font-size:.8rem;padding:5px 12px">⊕ Insert Embed</button>
+            </div>
           </div>
         </div>
 
@@ -125,6 +128,34 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Embed modal -->
+  <div class="modal-overlay" id="embedModal">
+    <div class="modal" style="max-width:520px;width:100%">
+      <h2>Insert Embed</h2>
+      <div style="display:flex;gap:8px;margin:14px 0 16px">
+        <button class="btn btn-secondary embed-tab active" data-tab="tweet" style="font-size:.8rem">Tweet / X Post</button>
+        <button class="btn btn-secondary embed-tab" data-tab="code" style="font-size:.8rem">Embed Code</button>
+      </div>
+
+      <div id="embedTabTweet">
+        <label class="form-label">Twitter / X URL</label>
+        <input type="url" class="form-input" id="tweetUrlInput" placeholder="https://twitter.com/user/status/123456789">
+        <p class="form-hint" style="margin-top:6px">Paste any twitter.com or x.com post URL.</p>
+      </div>
+
+      <div id="embedTabCode" style="display:none">
+        <label class="form-label">Embed Code</label>
+        <textarea class="form-textarea" id="embedCodeInput" rows="5" placeholder="<iframe src=&quot;https://...&quot; ...></iframe>"></textarea>
+        <p class="form-hint" style="margin-top:6px">Paste an iframe from Datawrapper, Flourish, YouTube, etc. Script tags are not allowed.</p>
+      </div>
+
+      <div class="modal-actions" style="margin-top:16px">
+        <button class="btn btn-secondary" id="cancelEmbedBtn">Cancel</button>
+        <button class="btn btn-primary" id="confirmEmbedBtn">Insert</button>
       </div>
     </div>
   </div>
