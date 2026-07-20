@@ -4,6 +4,21 @@ let quill;
 let postId = null;
 let tags = [];
 let coverImageUrl = null;
+let editorMode = 'visual'; // 'visual' | 'markdown'
+
+function setMode(mode) {
+  editorMode = mode;
+  document.getElementById('visualEditorWrap').style.display = mode === 'visual' ? '' : 'none';
+  document.getElementById('markdownEditorWrap').style.display = mode === 'markdown' ? '' : 'none';
+  document.getElementById('modeVisual').classList.toggle('active', mode === 'visual');
+  document.getElementById('modeMarkdown').classList.toggle('active', mode === 'markdown');
+  if (mode === 'markdown') updateMdPreview();
+}
+
+function updateMdPreview() {
+  const md = document.getElementById('mdTextarea').value;
+  document.getElementById('mdPreview').innerHTML = md ? marked.parse(md) : '<span style="color:#94a3b8;font-size:.875rem">Preview will appear here…</span>';
+}
 
 function getPostIdFromUrl() {
   const parts = window.location.pathname.split('/');
@@ -95,7 +110,9 @@ function collectData() {
   return {
     title: document.getElementById('titleInput').value.trim(),
     slug,
-    content: quill.root.innerHTML,
+    content: editorMode === 'markdown'
+      ? document.getElementById('mdTextarea').value
+      : quill.root.innerHTML,
     excerpt: document.getElementById('excerptInput').value.trim(),
     status,
     publishAt: status === 'scheduled' && publishAt ? new Date(publishAt).toISOString() : null,
@@ -170,7 +187,15 @@ async function loadPost(id) {
 
   if (post.coverImage) setCover(post.coverImage);
 
-  quill.root.innerHTML = post.content || '';
+  const isMarkdown = post.content && !/^\s*</.test(post.content);
+  if (isMarkdown) {
+    setMode('markdown');
+    document.getElementById('mdTextarea').value = post.content;
+    updateMdPreview();
+  } else {
+    setMode('visual');
+    quill.root.innerHTML = post.content || '';
+  }
   try { localStorage.removeItem('cms-editor-draft'); } catch {}
 }
 
@@ -202,6 +227,23 @@ document.addEventListener('DOMContentLoaded', () => {
   initEditor();
   postId = getPostIdFromUrl();
   if (postId) loadPost(postId);
+
+  // Mode toggle
+  document.getElementById('modeVisual').addEventListener('click', () => {
+    if (editorMode === 'visual') return;
+    const md = document.getElementById('mdTextarea').value;
+    if (md.trim() && !confirm('Switch to Visual mode? Markdown content will be cleared from the visual editor — save first to keep it.')) return;
+    setMode('visual');
+  });
+  document.getElementById('modeMarkdown').addEventListener('click', () => {
+    if (editorMode === 'markdown') return;
+    const html = quill.getText().trim();
+    if (html && !confirm('Switch to Markdown mode? Visual content won\'t be converted — save first to keep it.')) return;
+    setMode('markdown');
+  });
+
+  // Live Markdown preview
+  document.getElementById('mdTextarea').addEventListener('input', updateMdPreview);
 
   // Title → slug auto-generate
   document.getElementById('titleInput').addEventListener('input', function () {

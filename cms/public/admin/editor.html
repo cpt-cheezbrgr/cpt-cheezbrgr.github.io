@@ -8,6 +8,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css">
+  <style>
+    .mode-btn {
+      font-size: .75rem; font-weight: 500; padding: 3px 10px;
+      border-radius: 4px; border: none; background: transparent;
+      color: var(--text-muted); cursor: pointer; transition: all .15s;
+    }
+    .mode-btn.active { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.1); }
+    /* Markdown preview mirrors public blog post-content styles */
+    #mdPreview h1,#mdPreview h2,#mdPreview h3,#mdPreview h4 { font-weight:600; line-height:1.3; margin:1.4em 0 .5em; }
+    #mdPreview h1 { font-size:1.5rem; }
+    #mdPreview h2 { font-size:1.25rem; border-bottom:1px solid #e2e8f0; padding-bottom:6px; }
+    #mdPreview h3 { font-size:1.05rem; }
+    #mdPreview p { margin:0 0 1em; }
+    #mdPreview ul,#mdPreview ol { margin:0 0 1em 1.4em; }
+    #mdPreview li { margin-bottom:3px; }
+    #mdPreview blockquote { border-left:3px solid #0ea5e9; margin:1em 0; padding:8px 16px; background:rgba(14,165,233,.05); color:#64748b; border-radius:0 6px 6px 0; }
+    #mdPreview code { font-family:monospace; font-size:.85em; background:#f1f5f9; padding:2px 5px; border-radius:3px; }
+    #mdPreview pre { background:#0f172a; color:#e2e8f0; padding:16px; border-radius:6px; overflow-x:auto; margin:1em 0; }
+    #mdPreview pre code { background:none; padding:0; }
+    #mdPreview a { color:#0ea5e9; text-decoration:underline; }
+    #mdPreview hr { border:none; border-top:1px solid #e2e8f0; margin:1.5em 0; }
+    #mdPreview table { width:100%; border-collapse:collapse; margin:1em 0; font-size:.875rem; }
+    #mdPreview th,#mdPreview td { padding:8px 12px; border:1px solid #e2e8f0; }
+    #mdPreview th { background:#f1f5f9; font-weight:600; }
+    #mdPreview img { max-width:100%; border-radius:6px; }
+  </style>
 </head>
 <body>
   <aside class="sidebar">
@@ -56,10 +82,37 @@
             <input type="text" class="form-input" id="titleInput" placeholder="Post title…">
           </div>
           <div class="form-group">
-            <label class="form-label">Content</label>
-            <div id="quillEditor" style="min-height:360px;background:#fff;font-size:1rem"></div>
-            <div style="margin-top:8px">
-              <button type="button" class="btn btn-secondary" id="embedBtn" style="font-size:.8rem;padding:5px 12px">⊕ Insert Embed</button>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <label class="form-label" style="margin:0">Content</label>
+              <div style="display:flex;gap:2px;background:var(--border);border-radius:6px;padding:2px">
+                <button type="button" class="mode-btn active" id="modeVisual">Visual</button>
+                <button type="button" class="mode-btn" id="modeMarkdown">Markdown</button>
+              </div>
+            </div>
+
+            <!-- Visual (Quill) -->
+            <div id="visualEditorWrap">
+              <div id="quillEditor" style="min-height:360px;background:#fff;font-size:1rem"></div>
+              <div style="margin-top:8px">
+                <button type="button" class="btn btn-secondary" id="embedBtn" style="font-size:.8rem;padding:5px 12px">⊕ Insert Embed</button>
+              </div>
+            </div>
+
+            <!-- Markdown editor + live preview -->
+            <div id="markdownEditorWrap" style="display:none">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div>
+                  <div style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px;font-family:var(--font-mono)">Markdown</div>
+                  <textarea id="mdTextarea" spellcheck="true"
+                    style="width:100%;min-height:420px;font-family:var(--font-mono);font-size:.85rem;line-height:1.65;padding:14px;border:1px solid var(--border);border-radius:var(--radius);resize:vertical;background:#fff;color:#0f172a;"
+                    placeholder="# Heading&#10;&#10;Write in **Markdown** here…"></textarea>
+                </div>
+                <div>
+                  <div style="font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:6px;font-family:var(--font-mono)">Preview</div>
+                  <div id="mdPreview"
+                    style="min-height:420px;padding:14px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;font-size:.9375rem;line-height:1.8;overflow-y:auto"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -174,6 +227,7 @@
   <div class="toast-container" id="toasts"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
   <script src="/js/api.js"></script>
   <script src="/admin/js/editor.js"></script>
 </body>
